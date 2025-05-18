@@ -203,6 +203,12 @@ public class NewArrow : MonoBehaviour
         }
     }
 
+    public void OnDestroy()
+    {
+        Managers.Input.parryAction -= StartStuckCoroutine;
+        _stickCoroutine = null;
+    }
+
     void OnDrawGizmos()
     {
         Gizmos.color = Color.red;

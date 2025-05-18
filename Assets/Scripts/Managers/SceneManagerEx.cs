@@ -27,6 +27,7 @@ public class SceneManagerEx
     // 씬 정리
     public void Clear()
     {
-        CurrentScene.Clear();
+        if(CurrentScene != null) // 조건문 나중에 다시 점검하기
+            CurrentScene.Clear();
     }
 }
