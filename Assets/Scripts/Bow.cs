@@ -11,17 +11,12 @@ public class Bow : MonoBehaviour
     [SerializeField] float _launchForce;
     [SerializeField] float _maxLaunchForce;
     [SerializeField] Vector2 _direction;
-    [SerializeField] NewArrow _arrow;
+    [SerializeField] Arrow _arrow;
 
     void Start()
     {
         _pivot = transform.root.Find("Visual");
-        _arrow = GetComponentInChildren<NewArrow>();
-
-        if(_arrow == null)
-        {
-            Debug.Log("왜 널일까ㅣ?");
-        }
+        _arrow = GetComponentInChildren<Arrow>();
     }
 
     void Update()

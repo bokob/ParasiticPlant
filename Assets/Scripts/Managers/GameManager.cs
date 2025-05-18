@@ -7,7 +7,7 @@ public class GameManager : MonoBehaviour
 
     public PlayerController PlayerController { get; private set; }
     public Bow Bow { get; private set; }
-    public NewArrow Arrow { get; private set; }
+    public Arrow Arrow { get; private set; }
 
     void Awake()
     {
@@ -21,6 +21,6 @@ public class GameManager : MonoBehaviour
     {
         PlayerController = Managers.Resource.Instantiate("PlayerPrefab").GetComponent<PlayerController>();
         Bow = PlayerController.GetComponentInChildren<Bow>();
-        Arrow = Bow.GetComponentInChildren<NewArrow>();
+        Arrow = Bow.GetComponentInChildren<Arrow>();
     }
 }

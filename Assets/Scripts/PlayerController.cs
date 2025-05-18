@@ -7,13 +7,13 @@ public class PlayerController : MonoBehaviour
     Animator _anim;
     [SerializeField] Vector3 _warfPosition; // 워프 위치
     [SerializeField] Vector2 _upDirection;
-    NewArrow _arrow; // 화살
+    Arrow _arrow; // 화살
 
     void Awake()
     {
         _anim = GetComponent<Animator>();
         _anim.SetTrigger("SpawnTrigger");
-        _arrow = transform.Find("Bow").GetComponentInChildren<NewArrow>();
+        _arrow = transform.Find("Bow").GetComponentInChildren<Arrow>();
     }
 
     void Update()

@@ -13,7 +13,7 @@ public class GoalArea : MonoBehaviour
         {
             _existTime += Time.deltaTime;
             Debug.Log("플레이어 체류 중 " + _existTime);
-            if (_existTime >= 10f)
+            if (_existTime >= _successTime)
             {
                 // 성공
                 Debug.Log("Success");
