@@ -18,9 +18,6 @@ public class InputManager
     #region 액션
     public Action attackAction;                   // 공격
     public Action parryAction;                    // 패링
-    public Action<Vector2> dashAction;            // 대시
-    public Action<bool> rotateMagicAction;        // 마법 보따리 회전
-    public Action reloadMagicAction;              // 장전
     #endregion
 
     public void Init()
@@ -38,8 +35,6 @@ public class InputManager
 
         _inputSystemActions.Player.MousePos.performed += OnMousePos;
 
-        _inputSystemActions.Player.Dash.performed += OnDash;
-
         _inputSystemActions.Player.Attack.performed += OnAttack;
         _inputSystemActions.Player.Attack.canceled += OnAttack;
         _inputSystemActions.Player.Parry.performed += OnParry;
@@ -47,14 +42,11 @@ public class InputManager
         _inputSystemActions.Player.Release.performed += OnRelease;
 
         _inputSystemActions.Player.Reload.performed += OnReload;
-
-        _inputSystemActions.Player.RotateMagicBundle.performed += OnRotateMagicBundle;
     }
 
     void OnMove(InputAction.CallbackContext context)
     {
         MoveInput = context.ReadValue<Vector2>();
-        //Debug.Log(MoveInput);
         //Debug.Log(MoveInput);
     }
 
@@ -63,13 +55,6 @@ public class InputManager
         Vector2 mouseInput = context.ReadValue<Vector2>();
         MouseWorldPos = Camera.main.ScreenToWorldPoint(mouseInput);
         //Debug.Log(MouseWorldPos);
-    }
-
-    void OnDash(InputAction.CallbackContext context)
-    {
-        dashAction?.Invoke(MoveInput);
-        IsPressDash = context.ReadValueAsButton();
-        //Debug.LogWarning("IsPressDash: " + IsPressDash);
     }
 
     void OnAttack(InputAction.CallbackContext context)
@@ -98,23 +83,12 @@ public class InputManager
     void OnReload(InputAction.CallbackContext context)
     {
         Debug.Log("마법 장전");
-        reloadMagicAction?.Invoke();
-    }
-
-    void OnRotateMagicBundle(InputAction.CallbackContext context)
-    {
-        float x = context.ReadValue<Vector2>().x;
-        bool isCCW = x < 0;
-        rotateMagicAction?.Invoke(isCCW);
     }
 
     public void CancelAction()
     {
         attackAction = null;
         parryAction = null;
-        dashAction = null;
-        rotateMagicAction = null;
-        reloadMagicAction = null;
     }
 
     public void Clear()

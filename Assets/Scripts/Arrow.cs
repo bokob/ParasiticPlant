@@ -7,7 +7,6 @@ public class Arrow : MonoBehaviour
     PlayerController _playerController;
     Bow _bow;
 
-
     [Header("화살 상태")]
     [field: SerializeField] public bool IsFly { get; private set; } = false;    // 화살이 날아가고 있는지 여부
     [field: SerializeField] public bool IsStop { get; private set; } = false;   // 화살이 멈췄는지 여부
@@ -21,25 +20,30 @@ public class Arrow : MonoBehaviour
     Coroutine _stickCoroutine;
     LayerMask _platformLayerMask;
 
-    Vector2 _stickPosition;
-    Vector2 _stickDirection;
+    Vector2 _stickPosition;     // 꽂힌 위치 (화살 촉 끝과 닿은 지점)
+    Vector2 _stickDirection;    // 꽂힌 방향 (화살 촉 -> 벽 방향)
+    Transform _stickTransform;  // 꽂힌 Transform (화살 촉 끝과 닿은 지점)
 
-    void Start()
+    float _stickCheckOffset = 0.475f; // 꽂는 것을 검사할 위치 (화살 중심으로부터)
+
+    void Awake()
     {
         _rb = GetComponent<Rigidbody2D>();
         _playerController = transform.root.GetComponent<PlayerController>();
         _bow = transform.GetComponentInParent<Bow>();
 
         _platformLayerMask = LayerMask.GetMask("Platform");
+    }
 
-        Managers.Input.parryAction += StartStuckCoroutine; // 패링 입력 시 패링 시도
-
+    void Start()
+    {
+        Managers.Input.parryAction += StartStickCoroutine; // 패링 입력 시 패링 시도
         Init();
     }
 
     void Update()
     {
-        Debug.DrawLine(transform.position + transform.right * 0.475f, transform.position + transform.right * 0.475f + transform.right * 0.1f, Color.blue);
+        Debug.DrawLine(transform.position + transform.right * _stickCheckOffset, transform.position + transform.right * _stickCheckOffset + transform.right * 0.1f, Color.blue);
 
         if (IsFly)
             CheckCollision();
@@ -47,11 +51,11 @@ public class Arrow : MonoBehaviour
         if (_rb.linearVelocity == Vector2.zero && IsStop == false)
         {
             IsStop = true;
-
             Debug.Log("화살 멈춤");
-            if (_isStick == true)
+
+            if (_isStick)
             {
-                _playerController.Warf(_stickPosition, _stickDirection);
+                _playerController.Warf(_stickPosition, _stickDirection, _stickTransform);
             }
             else
             {
@@ -61,7 +65,7 @@ public class Arrow : MonoBehaviour
             return;
         }
         
-        if (_isHit == false && IsStop == false && IsFly == true)
+        if (IsFly == true && _isHit == false && IsStop == false)
             TrackMovement();
     }
 
@@ -97,6 +101,7 @@ public class Arrow : MonoBehaviour
         _rb.AddForce(flyVector, ForceMode2D.Impulse);
     }
 
+    // 화살이 날아가는 방향을 따라 회전
     void TrackMovement()
     {
         Vector2 direction = _rb.linearVelocity;
@@ -105,27 +110,24 @@ public class Arrow : MonoBehaviour
     }
 
     #region 화살 박기
-
-    public void StartStuckCoroutine()
+    public void StartStickCoroutine()
     {
         if (_isStick && !gameObject.activeSelf)
             return;
 
         if (_stickCoroutine != null)
             StopCoroutine(_stickCoroutine);
-        _stickCoroutine = StartCoroutine(ParryCoroutine());
+        _stickCoroutine = StartCoroutine(StickCoroutine());
     }
 
     // 판정
-    IEnumerator ParryCoroutine()
+    IEnumerator StickCoroutine()
     {
         _isStickWindow = true;
-        yield return new WaitForSeconds(_stickWindow);
+        yield return new WaitForSeconds(_stickWindow);  // 판정 시간동안 대기
         _isStickWindow = false;
         _stickCoroutine = null;
     }
-
-    #endregion
 
     public void TryStuck()
     {
@@ -135,14 +137,16 @@ public class Arrow : MonoBehaviour
         }
     }
 
-    // 꽂다
+    // 꽂기
     public void Stick()
     {
         _isStick = true;
-        _rb.linearVelocity = Vector2.zero;
         _rb.bodyType = RigidbodyType2D.Kinematic;
         _rb.constraints |= RigidbodyConstraints2D.FreezeRotation;
+        _rb.linearVelocity = Vector2.zero;
+        _rb.angularVelocity = 0f;
     }
+    #endregion
 
     void OnCollisionEnter2D(Collision2D collision)
     {
@@ -165,12 +169,14 @@ public class Arrow : MonoBehaviour
                 Debug.Log("플랫폼에 닿음");
                 Debug.Log("충돌 지점: " + collisionPoint);
                 Debug.Log("노멀 벡터: " + normal);
+                Debug.Log("꽂힌 Transform: " + rayHit.collider.transform);
 
                 _stickPosition = collisionPoint;
-                _stickDirection = -((Vector3)_stickPosition - transform.position + transform.right).normalized;
+                _stickDirection = -((Vector3)_stickPosition - transform.position + transform.right * _stickCheckOffset).normalized;
+                _stickTransform = rayHit.collider.transform;
 
-                // 충돌 지점을 시각적으로 표시
-                Debug.DrawLine(transform.position + transform.right, collisionPoint, Color.red, 1f);
+                // 충돌 지점을 가시화
+                Debug.DrawLine(transform.position + transform.right, collisionPoint, Color.red, 1f);    // 화살 촉 너머 -> 충돌 지점(화살 촉 끝)
                 Debug.DrawRay(collisionPoint, normal, Color.green, 1f);
 
                 TryStuck();
@@ -180,7 +186,7 @@ public class Arrow : MonoBehaviour
 
     public void OnDestroy()
     {
-        Managers.Input.parryAction -= StartStuckCoroutine;
+        Managers.Input.parryAction -= StartStickCoroutine;
         _stickCoroutine = null;
     }
 
